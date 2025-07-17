@@ -11,12 +11,12 @@ raise a GitHub issue or open a pull request with a fix.
 This directory is organized as follows:
 
 - [`./cs336-basics`](./cs336-basics): directory containing a module
-  `cs336_basics` and its associated `pyproject.toml`. This module contains the staff 
-  implementation of the language model from assignment 1. If you want to use your own 
+  `cs336_basics` and its associated `pyproject.toml`. This module contains the staff
+  implementation of the language model from assignment 1. If you want to use your own
   implementation, you can replace this directory with your own implementation.
 - [`./cs336_systems`](./cs336_systems): This folder is basically empty! This is the
-  module where you will implement your optimized Transformer language model. 
-  Feel free to take whatever code you need from assignment 1 (in `cs336-basics`) and copy it 
+  module where you will implement your optimized Transformer language model.
+  Feel free to take whatever code you need from assignment 1 (in `cs336-basics`) and copy it
   over as a starting point. In addition, you will implement distributed training and
   optimization in this module.
 
@@ -27,7 +27,7 @@ Visually, it should look something like:
 ├── cs336_basics  # A python module named cs336_basics
 │   ├── __init__.py
 │   └── ... other files in the cs336_basics module, taken from assignment 1 ...
-├── cs336_systems  # TODO(you): code that you'll write for assignment 2 
+├── cs336_systems  # TODO(you): code that you'll write for assignment 2
 │   ├── __init__.py
 │   └── ... TODO(you): any other files or folders you need for assignment 2 ...
 ├── README.md
@@ -52,7 +52,7 @@ Installed 85 packages in 711ms
 Python 3.12.10 (main, Apr  9 2025, 04:03:51) [Clang 20.1.0 ] on linux
 ...
 >>> import cs336_basics
->>> 
+>>>
 ```
 
 `uv run` installs dependencies automatically as dictated in the `pyproject.toml` file.
@@ -63,3 +63,8 @@ To submit, run `./test_and_make_submission.sh` . This script will install your
 code's dependencies, run tests, and create a gzipped tarball with the output. We
 should be able to unzip your submitted tarball and run
 `./test_and_make_submission.sh` to verify your test results.
+
+## Benmark
+```sh
+uv run cs336_systems/benchmark.py --model_config_name=small
+```
