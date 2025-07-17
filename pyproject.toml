@@ -41,6 +41,14 @@ line-length = 120
 # Also ignore `E402` in all `__init__.py` files.
 "__init__.py" = ["E402", "F401", "F403", "E501"]
 
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "jupyter>=1.1.1",
+    "ruff>=0.12.3",
+    "tyro>=0.9.26",
+]
+
 [tool.ruff.lint]
 extend-select = ["UP"]
 ignore = [
