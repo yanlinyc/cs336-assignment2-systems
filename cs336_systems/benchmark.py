@@ -1,12 +1,18 @@
 import timeit
 from dataclasses import dataclass
 
+import cs336_basics.model
 import torch
+import torch.cuda.nvtx as nvtx
 import tyro
 from cs336_basics.model import BasicsTransformerLM
 from cs336_basics.nn_utils import cross_entropy
 from cs336_basics.optimizer import AdamW
 from tqdm.auto import tqdm
+
+cs336_basics.model.scaled_dot_product_attention = (
+    cs336_basics.model.annotated_scaled_dot_product_attention
+)
 
 
 @dataclass
@@ -42,6 +48,7 @@ class BenchmarkConfig:
     time_unit: str = "seconds"  # Options: "seconds", "ms"
 
 
+@nvtx.range("Benchmarking Transformer Model")
 def benchmark(
     model_config: ModelConfig,
     num_warmups: int = 5,
@@ -69,28 +76,33 @@ def benchmark(
     ).to(device)
 
     # Warmup phase
-    for _ in tqdm(range(num_warmups), desc="Warming up"):
-        predictions = model(input_tensor)
-        loss = cross_entropy(predictions, input_tensor)
+    with nvtx.range("Warmup Phase"):
+        for _ in tqdm(range(num_warmups), desc="Warming up"):
+            predictions = model(input_tensor)
+            loss = cross_entropy(predictions, input_tensor)
 
-        if include_backward:
-            loss.backward()
-            optimizer.step()
+            if include_backward:
+                loss.backward()
+                optimizer.step()
 
-    if torch.cuda.is_available():
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
 
     # Benchmarking phase
     forward_times: list[float] = []
     backward_times: list[float] = []
 
-    for _ in tqdm(range(num_trials), desc="Benchmarking"):
+    nvtx.range_push("Benchmarking Phase")
+    for step in tqdm(range(num_trials), desc="Benchmarking"):
+        nvtx.range_push(f"Step_{step}")
         start_time = timeit.default_timer()
 
         # Forward pass
+        nvtx.range_push("Forward Pass")
         optimizer.zero_grad()
         predictions = model(input_tensor)
         loss = cross_entropy(predictions, input_tensor)
+        nvtx.range_pop()
         if torch.cuda.is_available():
             torch.cuda.synchronize()
         forward_end_time = timeit.default_timer()
@@ -98,12 +110,17 @@ def benchmark(
 
         # Backward pass
         if include_backward:
-            loss.backward()
-            optimizer.step()
+            with nvtx.range("Backward Pass"):
+                loss.backward()
+
+            with nvtx.range("Optimizer Step"):
+                optimizer.step()
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             backward_end_time = timeit.default_timer()
             backward_times.append(backward_end_time - forward_end_time)
+        nvtx.range_pop()
+    nvtx.range_pop()
 
     def _time_summary(times: list[float], label: str) -> tuple[float, float, float, float]:
         """Calculate and display timing statistics."""
