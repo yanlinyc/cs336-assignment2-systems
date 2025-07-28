@@ -176,13 +176,13 @@ def ddp_per_worker(rank: int, world_size: int, config: BenchmarkConfig):
         start_communication_time = timeit.default_timer()
         # all_reduce_gradients(model)
         all_reduce_gradients_flat(model)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         end_communication_time = timeit.default_timer()
         comm_times[step] = end_communication_time - start_communication_time
 
         optimizer.step()
 
-        if torch.cuda.is_available():
-            torch.cuda.synchronize()
         end_time = timeit.default_timer()
         train_step_times[step] = end_time - start_time
 
